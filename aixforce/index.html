@@ -1,0 +1,861 @@
+<title>AIXForce Iron-Dome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --helpag-red:#EC1C24;
+    --helpag-navy:#EDF2F7;
+    --helpag-gray:#93A3B4;
+    --helpag-white:#111A28;
+    --helpag-bg-light:#0C1420;
+    --card-border:rgba(255,255,255,0.09);
+
+    --bg-void:#070B12;
+    --fill-navy:#16243A;
+    --accent-blue:#5B9BF2;
+    --text-low:#5A6B7A;
+
+    --color-primary:var(--helpag-navy);
+    --color-accent:var(--helpag-red);
+    --color-muted:var(--helpag-gray);
+    --color-bg:var(--bg-void);
+    --color-bg-subtle:var(--helpag-bg-light);
+
+    --font-heading:'Montserrat', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'Roboto Mono', monospace;
+
+    --navy-04:rgba(91,155,242,0.07);
+    --navy-08:rgba(91,155,242,0.12);
+    --navy-14:rgba(91,155,242,0.2);
+    --red-10:rgba(236,28,36,0.14);
+    --red-35:rgba(236,28,36,0.4);
+    --warn:#E8952E;
+    --warn-bg:rgba(232,149,46,0.12);
+    --ok:#31C48D;
+    --ok-bg:rgba(49,196,141,0.12);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{overflow-x:hidden;}
+  body{
+    margin:0;
+    background:var(--color-bg);
+    color:var(--color-primary);
+    font-family:var(--font-body);
+    min-height:100%;
+  }
+
+  #netgraph{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    width:100%; height:100%; opacity:0.75;
+    mask-image:radial-gradient(ellipse 100% 80% at 50% 20%, black 35%, transparent 92%);
+  }
+  .grid-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(ellipse 100% 80% at 50% 0%, black 25%, transparent 90%);
+  }
+
+  .wrap{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 20px 60px;}
+
+  /* ---------- Fixed header ---------- */
+  .hdr{
+    position:sticky; top:0; z-index:5; padding:12px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:rgba(7,11,18,0.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--card-border);
+  }
+  .hdr-brand{display:flex; align-items:center; gap:10px;}
+  .hdr-mark{
+    width:32px; height:32px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    background:var(--fill-navy); color:var(--helpag-navy); font-family:var(--font-heading); font-weight:800; font-size:12px;
+    border:1px solid var(--navy-14);
+  }
+  .hdr-title{font-family:var(--font-heading); font-weight:800; font-size:15px; letter-spacing:0.3px; color:var(--helpag-navy);}
+  .hdr-title span{color:var(--helpag-red);}
+  .hdr-title em{font-style:normal; font-family:var(--font-body); color:var(--helpag-gray); font-weight:500; font-size:11px; letter-spacing:0.5px; margin-left:6px;}
+  .hdr-mid{display:flex; gap:22px; flex-wrap:wrap;}
+  .hdr-stat{text-align:right;}
+  .hdr-stat .v{font-family:var(--font-mono); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--helpag-navy);}
+  .hdr-stat .l{font-size:9px; letter-spacing:1.4px; color:var(--helpag-gray); text-transform:uppercase;}
+  .hdr-stat.crit .v{color:var(--helpag-red);}
+  .hdr-posture{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+    padding:5px 11px; border-radius:20px; color:var(--warn); border:1px solid rgba(201,122,30,0.35); background:var(--warn-bg);
+    display:flex; align-items:center; gap:7px;
+  }
+  .hdr-posture i{width:7px; height:7px; border-radius:50%; background:var(--warn); box-shadow:0 0 6px rgba(201,122,30,0.5); animation:blip 1.8s infinite;}
+  @keyframes blip{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  @media (prefers-reduced-motion:reduce){.hdr-posture i{animation:none;}}
+  .hdr-nav{display:flex; gap:14px; font-size:11px; font-family:var(--font-mono); color:var(--helpag-gray);}
+  .hdr-nav a{color:inherit; text-decoration:none; letter-spacing:0.3px;}
+  .hdr-nav a:hover{color:var(--helpag-red);}
+  @media (max-width:900px){.hdr-nav{display:none;}}
+
+  /* ---------- Section shell ---------- */
+  .sec{padding-top:64px; scroll-margin-top:70px;}
+  .sec:first-of-type{padding-top:26px;}
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .55s ease, transform .55s ease;}
+  .reveal.in-view{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1; transform:none; transition:none;}}
+
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .sec-eyebrow{font-family:var(--font-mono); font-size:10.5px; letter-spacing:2.2px; text-transform:uppercase; color:var(--helpag-red);}
+  .sec-title{font-family:var(--font-heading); font-size:23px; font-weight:800; letter-spacing:0.1px; margin-top:4px; color:var(--helpag-navy);}
+  .sec-sub{font-size:12.5px; color:var(--helpag-gray); font-family:var(--font-mono);}
+
+  /* ---------- Panel ---------- */
+  .panel{
+    position:relative; border:1px solid var(--card-border); border-radius:8px;
+    background:var(--helpag-white);
+    box-shadow:0 1px 2px rgba(0,0,0,0.25), 0 10px 26px rgba(0,0,0,0.28);
+    padding:16px 18px 18px;
+  }
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .panel-title{font-family:var(--font-heading); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--helpag-navy); display:flex; align-items:center; gap:8px; font-weight:700;}
+  .panel-title .bar{width:3px; height:14px; background:var(--helpag-red); border-radius:2px;}
+  .panel-tag{font-size:10px; font-family:var(--font-mono); color:var(--helpag-gray); border:1px solid var(--card-border); padding:3px 8px; border-radius:20px;}
+
+  /* ---------- Hero / Dome ---------- */
+  .hero{display:grid; grid-template-columns:1fr; gap:24px; text-align:center; padding-top:8px;}
+  .director-photo{
+    width:112px; height:112px; border-radius:50%; object-fit:cover; margin:0 auto;
+    border:3px solid var(--bg-void);
+    box-shadow:0 0 0 3px var(--accent-blue), 0 8px 28px rgba(0,0,0,0.45);
+  }
+  .director-role{font-size:11px; letter-spacing:1.8px; color:var(--helpag-red); text-transform:uppercase; font-family:var(--font-mono); margin-top:12px;}
+  .director-name{font-family:var(--font-heading); font-size:26px; font-weight:800; margin:6px 0 6px; color:var(--helpag-navy);}
+  .director-status{font-size:13.5px; color:var(--helpag-gray); max-width:52ch; margin:0 auto; line-height:1.6;}
+  .director-status b{color:var(--warn);}
+  .hero-badges{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;}
+  .badge{font-size:11px; font-family:var(--font-mono); padding:5px 10px; border-radius:6px; border:1px solid var(--card-border);}
+  .badge.ok{color:var(--ok); border-color:rgba(30,138,99,0.3); background:var(--ok-bg);}
+  .badge.warn{color:var(--warn); border-color:rgba(201,122,30,0.3); background:var(--warn-bg);}
+
+  .dome-stage{position:relative; width:min(420px,90vw); height:min(420px,90vw); margin:8px auto 0;}
+  .dome-stage canvas{width:100%; height:100%; display:block;}
+  .dome-controls{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px;}
+  .btn{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.8px; text-transform:uppercase;
+    padding:10px 18px; border-radius:6px; cursor:pointer; font-weight:600; border:1px solid var(--accent-blue);
+    background:transparent; color:var(--accent-blue); position:relative; overflow:hidden;
+  }
+  .btn:hover{background:var(--navy-04);}
+  .btn.primary{background:var(--helpag-red); color:#fff; border:none; box-shadow:0 4px 18px rgba(236,28,36,0.35);}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn:disabled{opacity:0.5; cursor:default; filter:none;}
+  .btn:focus-visible{outline:2px solid var(--accent-blue); outline-offset:2px;}
+  .btn .ripple{position:absolute; border-radius:50%; background:rgba(255,255,255,0.6); transform:scale(0); pointer-events:none; animation:rip .55s ease-out;}
+  @keyframes rip{to{transform:scale(3); opacity:0;}}
+  @media (prefers-reduced-motion:reduce){.btn .ripple{display:none;}}
+
+  /* ---------- Agent rings ---------- */
+  .ring-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+  @media (max-width:860px){.ring-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:480px){.ring-grid{grid-template-columns:1fr;}}
+  .ring-card{border:1px solid var(--card-border); border-radius:8px; padding:16px 10px; background:var(--helpag-white); box-shadow:0 1px 2px rgba(0,0,0,0.25); display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;}
+  .ring-svg{width:84px; height:84px;}
+  .ring-track{fill:none; stroke:rgba(255,255,255,0.08); stroke-width:6;}
+  .ring-bar{fill:none; stroke-width:6; stroke-linecap:round; transform:rotate(-90deg); transform-origin:50% 50%; animation:ringspin 3.2s linear infinite;}
+  @keyframes ringspin{from{stroke-dashoffset:0;}to{stroke-dashoffset:-251;}}
+  @media (prefers-reduced-motion:reduce){.ring-bar{animation:none;}}
+  .ring-name{font-size:12.5px; font-weight:700; letter-spacing:0.2px; margin-top:2px; font-family:var(--font-heading);}
+  .ring-task{font-size:10.5px; color:var(--helpag-gray); font-family:var(--font-mono); line-height:1.4; min-height:28px;}
+  .ring-state{font-size:9.5px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.8px; padding:2px 8px; border-radius:20px;}
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+  @media (max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+  .kpi{border:1px solid var(--card-border); border-radius:8px; padding:13px 14px; background:var(--helpag-white); box-shadow:0 1px 2px rgba(0,0,0,0.25);}
+  .kpi .l{font-size:10px; letter-spacing:1px; color:var(--helpag-gray); text-transform:uppercase;}
+  .kpi .v{font-family:var(--font-mono); font-size:22px; font-weight:700; margin-top:5px; font-variant-numeric:tabular-nums; color:var(--helpag-navy);}
+  .kpi .d{font-size:10.5px; margin-top:4px; font-family:var(--font-mono);}
+  .kpi .d.up{color:var(--helpag-red);}
+  .kpi .d.down{color:var(--ok);}
+  .kpi.crit .v{color:var(--helpag-red);}
+
+  /* ---------- Alerts ---------- */
+  .alert-row{display:grid; grid-template-columns:70px 1fr auto; gap:12px; align-items:center; padding:10px 8px; border-bottom:1px solid var(--card-border); font-size:12.5px;}
+  .alert-row:last-child{border-bottom:none;}
+  .sev{font-family:var(--font-mono); font-size:10px; letter-spacing:0.8px; text-transform:uppercase; padding:3px 7px; border-radius:5px; text-align:center; width:fit-content;}
+  .sev.crit{color:var(--helpag-red); background:var(--red-10); border:1px solid var(--red-35);}
+  .sev.high{color:var(--warn); background:var(--warn-bg); border:1px solid rgba(201,122,30,0.35);}
+  .sev.med{color:var(--accent-blue); background:var(--navy-08); border:1px solid var(--navy-14);}
+  .alert-main .t{color:var(--helpag-navy); font-weight:600;}
+  .alert-main .m{color:var(--helpag-gray); font-family:var(--font-mono); font-size:11px; margin-top:2px;}
+  .alert-time{font-family:var(--font-mono); font-size:11px; color:var(--helpag-gray); white-space:nowrap;}
+
+  /* ---------- Timeline ---------- */
+  .timeline{position:relative; padding-left:26px;}
+  .timeline::before{content:""; position:absolute; left:7px; top:4px; bottom:4px; width:2px; background:linear-gradient(var(--accent-blue), var(--helpag-red)); opacity:0.4;}
+  .tl-item{position:relative; padding-bottom:22px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-dot{position:absolute; left:-26px; top:2px; width:15px; height:15px; border-radius:50%; background:var(--helpag-white); border:2px solid var(--accent-blue);}
+  .tl-item.crit .tl-dot{border-color:var(--helpag-red);}
+  .tl-item.ok .tl-dot{border-color:var(--ok);}
+  .tl-time{font-family:var(--font-mono); font-size:10.5px; color:var(--helpag-gray); letter-spacing:0.4px;}
+  .tl-title{font-weight:700; font-size:14px; margin:2px 0 4px; color:var(--helpag-navy); font-family:var(--font-heading);}
+  .tl-body{font-size:12.5px; color:var(--helpag-gray); line-height:1.55; max-width:68ch;}
+  .tl-body b{color:var(--helpag-navy);}
+  .tl-tag{display:inline-block; margin-top:6px; font-family:var(--font-mono); font-size:10px; color:var(--accent-blue); border:1px solid var(--navy-14); background:var(--navy-04); padding:2px 8px; border-radius:20px;}
+  .tl-item.pending{opacity:0.4;}
+
+  /* ---------- Entity graph ---------- */
+  .entity-wrap{position:relative; height:400px; border:1px solid var(--card-border); border-radius:8px; background:var(--bg-void); overflow:hidden;}
+  .entity-wrap canvas{width:100%; height:100%; display:block;}
+  .entity-legend{display:flex; gap:16px; margin-top:12px; font-size:10.5px; color:var(--helpag-gray); flex-wrap:wrap;}
+  .entity-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .lg-sw{width:9px; height:9px; border-radius:3px;}
+
+  /* ---------- MITRE matrix ---------- */
+  .matrix-scroll{overflow-x:auto; padding-bottom:4px;}
+  .matrix{display:grid; grid-auto-flow:column; gap:8px; min-width:max-content;}
+  .matrix-col{display:flex; flex-direction:column; gap:6px; width:130px;}
+  .matrix-col-head{font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.4px; text-transform:uppercase; color:var(--helpag-gray); padding:6px 4px; border-bottom:1px solid var(--card-border); text-align:center;}
+  .matrix-cell{border:1px solid var(--card-border); border-radius:6px; padding:7px 8px; background:var(--helpag-white); font-size:10.5px; color:var(--helpag-gray); font-family:var(--font-mono); line-height:1.35;}
+  .matrix-cell b{display:block; color:var(--helpag-navy); font-size:10.5px; font-weight:700;}
+  .matrix-cell.hit1{background:var(--warn-bg); border-color:rgba(201,122,30,0.35);} .matrix-cell.hit1 b{color:var(--warn);}
+  .matrix-cell.hit2{background:var(--red-10); border-color:var(--red-35);} .matrix-cell.hit2 b{color:var(--helpag-red);}
+
+  /* ---------- Playbook ---------- */
+  .pb-phase{display:flex; flex-direction:column; gap:10px;}
+  .pb-step{display:grid; grid-template-columns:26px 1fr auto; gap:12px; align-items:start; border:1px solid var(--card-border); border-radius:8px; padding:11px 13px; background:var(--helpag-white);}
+  .pb-num{width:26px; height:26px; border-radius:50%; border:1px solid var(--navy-14); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:11px; color:var(--accent-blue);}
+  .pb-step.done .pb-num{background:var(--ok-bg); border-color:var(--ok); color:var(--ok);}
+  .pb-name{font-weight:700; font-size:13px; color:var(--helpag-navy); font-family:var(--font-heading);}
+  .pb-desc{font-size:11.5px; color:var(--helpag-gray); margin-top:3px; line-height:1.5;}
+  .pb-status{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.4px; padding:4px 10px; border-radius:20px; white-space:nowrap; height:fit-content;}
+  .pb-status.done{color:var(--ok); border:1px solid rgba(30,138,99,0.35); background:var(--ok-bg);}
+  .pb-status.wait{color:var(--warn); border:1px solid rgba(201,122,30,0.35); background:var(--warn-bg);}
+  .pb-status.queued{color:var(--helpag-gray); border:1px solid var(--card-border);}
+
+  /* ---------- Exec dashboard ---------- */
+  .exec-cols{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:860px){.exec-cols{grid-template-columns:1fr;}}
+  .risk-heat{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+  .heat-cell{aspect-ratio:1; border-radius:5px;}
+  .bar-chart{display:flex; align-items:flex-end; gap:10px; height:140px; padding-top:10px;}
+  .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .bar-shape{width:100%; border-radius:4px 4px 0 0; background:linear-gradient(180deg, var(--accent-blue), var(--fill-navy));}
+  .bar-lbl{font-size:9.5px; font-family:var(--font-mono); color:var(--helpag-gray);}
+
+  /* ---------- Logs footer ---------- */
+  .logs-panel{background:#04070B; border:1px solid var(--card-border); border-radius:8px; padding:14px 16px; font-family:var(--font-mono); font-size:11.5px; color:#c7d3e0; max-height:220px; overflow-y:auto;}
+  .logs-panel div{padding:3px 0; border-bottom:1px dashed rgba(255,255,255,0.1);}
+  .logs-panel b{color:#ff6b71;}
+  footer.note{margin-top:20px; text-align:center; font-size:11px; color:var(--helpag-gray); font-family:var(--font-mono); letter-spacing:0.3px;}
+
+  /* ---------- Tool stack ---------- */
+  .stack-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width:860px){.stack-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:520px){.stack-grid{grid-template-columns:1fr;}}
+  .stack-cat{border:1px solid var(--card-border); border-radius:8px; padding:14px; background:var(--helpag-white);}
+  .stack-cat h4{margin:0 0 10px; font-family:var(--font-heading); font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent-blue); font-weight:700;}
+  .stack-tags{display:flex; flex-wrap:wrap; gap:6px;}
+  .stack-tag{font-family:var(--font-mono); font-size:10.5px; color:var(--helpag-navy); border:1px solid var(--card-border); background:rgba(255,255,255,0.03); padding:4px 9px; border-radius:20px;}
+  .stack-note{font-size:11.5px; color:var(--helpag-gray); margin-top:14px; line-height:1.6; max-width:80ch;}
+</style>
+
+<canvas id="netgraph"></canvas>
+<div class="grid-overlay"></div>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-mark">AX</div>
+    <div class="hdr-title">AIX<span>FORCE</span> IRON-DOME<em>an e&amp; enterprise company</em></div>
+  </div>
+  <nav class="hdr-nav">
+    <a href="#dome">Dome</a><a href="#agents">Agents</a><a href="#alerts">Alerts</a><a href="#timeline">Timeline</a>
+    <a href="#entity">Entities</a><a href="#mitre">MITRE</a><a href="#playbook">Playbooks</a><a href="#exec">Exec</a><a href="#logs">Logs</a><a href="#stack">Stack</a>
+  </nav>
+  <div class="hdr-mid">
+    <div class="hdr-stat crit"><div class="v">4</div><div class="l">Incidents</div></div>
+    <div class="hdr-stat"><div class="v" id="hdrClock">04:12:37Z</div><div class="l">UTC</div></div>
+  </div>
+  <div class="hdr-posture"><i></i>Posture: Elevated</div>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= DOME / HERO ================= -->
+  <section class="sec" id="dome">
+    <div class="hero reveal">
+      <img class="director-photo" src="/_blob/9c8702bf3aef58792de75d2df7b965a3" alt="Nayan Parakh, SOC Director">
+      <div>
+        <div class="director-role">SOC Director · Watch Commander</div>
+        <div class="director-name">Nayan Parakh</div>
+        <div class="director-status">Iron-Dome is monitoring 1,204 assets across 5 autonomous agents. One active incident under containment — <b>INC-20294</b>.</div>
+        <div class="hero-badges">
+          <span class="badge ok">● All agents nominal</span>
+          <span class="badge warn">1 incident in progress</span>
+        </div>
+      </div>
+
+      <div class="dome-stage">
+        <canvas id="domeCanvas"></canvas>
+      </div>
+      <div class="dome-controls">
+        <button type="button" class="btn" id="activateDomeBtn">Activate Dome</button>
+        <button type="button" class="btn primary" id="runScenarioBtn">▶ Run Scenario — Phishing → Lateral Movement</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AGENT RINGS ================= -->
+  <section class="sec reveal" id="agents">
+    <div class="sec-head"><div><div class="sec-eyebrow">Autonomous Fleet</div><div class="sec-title">Agent Activity Rings</div></div><div class="panel-tag">5/5 online · agent sync active</div></div>
+    <div class="ring-grid">
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="40"/><circle class="ring-bar" cx="50" cy="50" r="40" stroke="#4FA8E8" stroke-dasharray="180 251"/></svg>
+        <div class="ring-name" style="color:#4FA8E8">Detection</div>
+        <div class="ring-task">Parsing EDR telemetry · 1,204 hosts/min</div>
+        <span class="ring-state" style="color:#4FA8E8; border:1px solid rgba(79,168,232,0.35); background:rgba(79,168,232,0.08);">Scanning</span>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="40"/><circle class="ring-bar" cx="50" cy="50" r="40" stroke="#A184F0" stroke-dasharray="140 251"/></svg>
+        <div class="ring-name" style="color:#A184F0">Triage</div>
+        <div class="ring-task">Correlating ALRT-88213 w/ identity signal</div>
+        <span class="ring-state" style="color:#A184F0; border:1px solid rgba(161,132,240,0.35); background:rgba(161,132,240,0.08);">Classifying</span>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="40"/><circle class="ring-bar" cx="50" cy="50" r="40" stroke="var(--warn)" stroke-dasharray="160 251"/></svg>
+        <div class="ring-name" style="color:var(--warn)">Investigation</div>
+        <div class="ring-task">Reconstructing timeline for INC-20294</div>
+        <span class="ring-state" style="color:var(--warn); border:1px solid rgba(201,122,30,0.35); background:var(--warn-bg);">Mapping</span>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="40"/><circle class="ring-bar" cx="50" cy="50" r="40" stroke="var(--helpag-red)" stroke-dasharray="95 251"/></svg>
+        <div class="ring-name" style="color:var(--helpag-red)">Response</div>
+        <div class="ring-task">Staging isolation · FIN-WKS-114</div>
+        <span class="ring-state" style="color:var(--helpag-red); border:1px solid var(--red-35); background:var(--red-10);">Staging</span>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="40"/><circle class="ring-bar" cx="50" cy="50" r="40" stroke="var(--ok)" stroke-dasharray="225 251"/></svg>
+        <div class="ring-name" style="color:var(--ok)">Reporting</div>
+        <div class="ring-task">Compiling shift 03:00–06:00 UTC</div>
+        <span class="ring-state" style="color:var(--ok); border:1px solid rgba(30,138,99,0.35); background:var(--ok-bg);">Compiling</span>
+      </div>
+    </div>
+
+    <div class="kpi-row" style="margin-top:16px;">
+      <div class="kpi crit"><div class="l">Open Incidents</div><div class="v">4</div><div class="d up">▲ 1 vs 24h</div></div>
+      <div class="kpi"><div class="l">Mean Time to Triage</div><div class="v">41s</div><div class="d down">▼ 12s</div></div>
+      <div class="kpi"><div class="l">Mean Time to Contain</div><div class="v">6.2m</div><div class="d down">▼ 1.4m</div></div>
+      <div class="kpi"><div class="l">Alerts / Hour</div><div class="v">312</div><div class="d up">▲ 8%</div></div>
+      <div class="kpi"><div class="l">Auto-Contained</div><div class="v">89%</div><div class="d down">▼ 2%</div></div>
+    </div>
+  </section>
+
+  <!-- ================= LIVE ALERTS ================= -->
+  <section class="sec reveal" id="alerts">
+    <div class="sec-head"><div><div class="sec-eyebrow">Perimeter</div><div class="sec-title">Live Alert Feed</div></div><div class="panel-tag">312/hr ingest</div></div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><span class="bar"></span>Queue — Unresolved</div><div class="panel-tag" id="alertsTag">14 open</div></div>
+      <div class="alerts-list" id="fullAlertsList">
+        <div class="alert-row"><span class="sev crit">Critical</span><div class="alert-main"><div class="t">Suspicious OAuth grant — mail.read.all</div><div class="m">user: d.romero@corp-example.io · app: "QuickSync Helper" · SRC: Azure AD</div></div><div class="alert-time">00:14</div></div>
+        <div class="alert-row"><span class="sev crit">Critical</span><div class="alert-main"><div class="t">Lateral movement via PsExec</div><div class="m">host: FIN-WKS-114 → DC-EAST-02 · T1021.002 · SRC: EDR</div></div><div class="alert-time">02:03</div></div>
+        <div class="alert-row"><span class="sev crit">Critical</span><div class="alert-main"><div class="t">Shadow copy deletion attempt</div><div class="m">host: FIN-WKS-114 · cmd: vssadmin delete shadows /all /quiet · SRC: EDR</div></div><div class="alert-time">02:41</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">Impossible travel — MFA satisfied</div><div class="m">user: k.alvarez · SG → US-East in 4m · SRC: Identity</div></div><div class="alert-time">06:41</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">LSASS memory access flagged</div><div class="m">proc: rundll32.exe · host: EDR-LNX-0417 · SRC: EDR</div></div><div class="alert-time">09:12</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">New forwarding rule created</div><div class="m">mailbox: d.romero@corp-example.io → external SMTP · SRC: M365</div></div><div class="alert-time">11:04</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">Privilege escalation — new domain admin</div><div class="m">actor: svc-backup-agent · target: j.chen · SRC: AD</div></div><div class="alert-time">12:58</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">Unsigned driver loaded</div><div class="m">host: FIN-WKS-114 · file: rtcore64.sys · SRC: EDR</div></div><div class="alert-time">13:20</div></div>
+        <div class="alert-row"><span class="sev high">High</span><div class="alert-main"><div class="t">Outbound beacon to known C2 IOC</div><div class="m">host: FIN-WKS-114 → 185.220.101.47:443 · SRC: NDR</div></div><div class="alert-time">13:47</div></div>
+        <div class="alert-row"><span class="sev med">Medium</span><div class="alert-main"><div class="t">New S3 bucket policy — public-read</div><div class="m">bucket: acct-exports-prod · actor: iam-deploy-svc · SRC: CloudTrail</div></div><div class="alert-time">14:55</div></div>
+        <div class="alert-row"><span class="sev med">Medium</span><div class="alert-main"><div class="t">Unusual PowerShell encoded command</div><div class="m">host: HR-LT-2291 · parent: outlook.exe · SRC: EDR</div></div><div class="alert-time">18:30</div></div>
+        <div class="alert-row"><span class="sev med">Medium</span><div class="alert-main"><div class="t">New OAuth app registered — org-wide consent</div><div class="m">app: "DataSync Pro" · actor: svc-appreg · SRC: Azure AD</div></div><div class="alert-time">21:02</div></div>
+        <div class="alert-row"><span class="sev med">Medium</span><div class="alert-main"><div class="t">Login from Tor exit node</div><div class="m">user: guest-portal-svc · ip: 198.98.51.x · SRC: WAF</div></div><div class="alert-time">23:19</div></div>
+        <div class="alert-row"><span class="sev med">Medium</span><div class="alert-main"><div class="t">Excessive failed logins</div><div class="m">user: admin-legacy · attempts: 42 in 3m · SRC: AD</div></div><div class="alert-time">26:44</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INCIDENT TIMELINE ================= -->
+  <section class="sec reveal" id="timeline">
+    <div class="sec-head"><div><div class="sec-eyebrow">Investigation Agent</div><div class="sec-title">Incident Timeline — INC-20294</div><div class="sec-sub">Phishing → Credential Theft → Lateral Movement</div></div><div class="panel-tag" id="tlStatusTag">4 events · live</div></div>
+    <div class="panel">
+      <div class="timeline" id="scenarioTimeline">
+        <div class="tl-item crit">
+          <div class="tl-dot"></div>
+          <div class="tl-time">00:14:02 UTC</div>
+          <div class="tl-title">Spearphishing link delivered</div>
+          <div class="tl-body">User <b>d.romero@corp-example.io</b> receives "QuickSync Helper" OAuth consent request via email, spoofed as an internal IT tool. Link routes through a fast-flux redirect at <b>sync-cdn-relay.net</b>.</div>
+          <span class="tl-tag">T1566.002 · Detection Agent</span>
+        </div>
+        <div class="tl-item crit">
+          <div class="tl-dot"></div>
+          <div class="tl-time">00:14:47 UTC</div>
+          <div class="tl-title">OAuth grant approved — credential theft</div>
+          <div class="tl-body">User approves <b>mail.read.all + offline_access</b> scopes. Attacker now has persistent mailbox access without needing a password. A forwarding rule is silently created to an external SMTP relay.</div>
+          <span class="tl-tag">T1098.001 · Triage Agent</span>
+        </div>
+        <div class="tl-item crit">
+          <div class="tl-dot"></div>
+          <div class="tl-time">02:03:15 UTC</div>
+          <div class="tl-title">Lateral movement — PsExec to domain controller</div>
+          <div class="tl-body">Harvested session cookie reused to authenticate to <b>FIN-WKS-114</b>. Attacker pushes <b>PsExec</b> to pivot toward <b>DC-EAST-02</b>, consistent with UNC-4821 tradecraft.</div>
+          <span class="tl-tag">T1021.002 · Investigation Agent</span>
+        </div>
+        <div class="tl-item crit">
+          <div class="tl-dot"></div>
+          <div class="tl-time">02:41:09 UTC</div>
+          <div class="tl-title">Ransomware precursor — shadow copy deletion</div>
+          <div class="tl-body"><b>vssadmin delete shadows /all /quiet</b> executed on FIN-WKS-114 — a standard pre-encryption step. Response Agent auto-drafts an isolation action.</div>
+          <span class="tl-tag">T1490 · Response Agent</span>
+        </div>
+        <div class="tl-item pending" id="tlStep5">
+          <div class="tl-dot"></div>
+          <div class="tl-time">— pending —</div>
+          <div class="tl-title">Containment: host isolation</div>
+          <div class="tl-body">Awaiting approval from Response Playbook Console to isolate FIN-WKS-114 and revoke the OAuth grant. Click "Contain Threat" below or run the scenario from the dome.</div>
+          <span class="tl-tag">Playbook AX-RB-014</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;"><button type="button" class="btn" id="containBtn">Contain Threat</button></div>
+    </div>
+  </section>
+
+  <!-- ================= ENTITY GRAPH ================= -->
+  <section class="sec reveal" id="entity">
+    <div class="sec-head"><div><div class="sec-eyebrow">Investigation Agent</div><div class="sec-title">Entity Relationship Graph</div></div></div>
+    <div class="panel">
+      <div class="entity-wrap"><canvas id="entityCanvas"></canvas></div>
+      <div class="entity-legend">
+        <span><span class="lg-sw" style="background:var(--accent-blue)"></span>User / identity</span>
+        <span><span class="lg-sw" style="background:#A184F0"></span>Host / asset</span>
+        <span><span class="lg-sw" style="background:var(--helpag-red)"></span>External indicator</span>
+        <span><span class="lg-sw" style="background:var(--ok)"></span>Cloud resource</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MITRE MATRIX ================= -->
+  <section class="sec reveal" id="mitre">
+    <div class="sec-head"><div><div class="sec-eyebrow">Coverage</div><div class="sec-title">MITRE ATT&amp;CK Matrix</div></div><div class="panel-tag">6 tactics observed</div></div>
+    <div class="panel">
+      <div class="matrix-scroll">
+        <div class="matrix">
+          <div class="matrix-col"><div class="matrix-col-head">Initial Access</div><div class="matrix-cell hit2"><b>T1566.002</b>Spearphishing link</div><div class="matrix-cell">T1190 Exploit public app</div><div class="matrix-cell">T1133 External remote svc</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Execution</div><div class="matrix-cell hit1"><b>T1059.001</b>PowerShell</div><div class="matrix-cell">T1047 WMI</div><div class="matrix-cell">T1204 User execution</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Persistence</div><div class="matrix-cell hit2"><b>T1098.001</b>Add cloud creds</div><div class="matrix-cell">T1547 Boot / logon autostart</div><div class="matrix-cell">T1136 Create account</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Priv Escalation</div><div class="matrix-cell hit1"><b>T1078.004</b>Cloud accounts</div><div class="matrix-cell">T1548 Bypass UAC</div><div class="matrix-cell">T1068 Exploitation</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Defense Evasion</div><div class="matrix-cell hit2"><b>T1562.001</b>Disable tools</div><div class="matrix-cell hit1"><b>T1556</b>Modify auth process</div><div class="matrix-cell">T1070 Indicator removal</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Credential Access</div><div class="matrix-cell hit2"><b>T1003.001</b>LSASS memory</div><div class="matrix-cell">T1110 Brute force</div><div class="matrix-cell">T1552 Unsecured creds</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Discovery</div><div class="matrix-cell hit1"><b>T1087</b>Account discovery</div><div class="matrix-cell">T1018 Remote system disc.</div><div class="matrix-cell">T1082 System info disc.</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Lateral Movement</div><div class="matrix-cell hit2"><b>T1021.002</b>SMB / PsExec</div><div class="matrix-cell">T1550 Use alt auth material</div><div class="matrix-cell">T1080 Taint shared content</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Collection</div><div class="matrix-cell">T1114 Email collection</div><div class="matrix-cell">T1005 Local data</div><div class="matrix-cell">T1560 Archive collected</div></div>
+          <div class="matrix-col"><div class="matrix-col-head">Impact</div><div class="matrix-cell hit1"><b>T1490</b>Inhibit recovery</div><div class="matrix-cell">T1486 Data encrypted</div><div class="matrix-cell">T1489 Service stop</div></div>
+        </div>
+      </div>
+      <div class="entity-legend" style="margin-top:14px;">
+        <span><span class="lg-sw" style="background:var(--warn)"></span>Observed this incident</span>
+        <span><span class="lg-sw" style="background:var(--helpag-red)"></span>Confirmed / active technique</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PLAYBOOK ================= -->
+  <section class="sec reveal" id="playbook">
+    <div class="sec-head"><div><div class="sec-eyebrow">Response Agent</div><div class="sec-title">Playbook Console</div><div class="sec-sub">AX-RB-014 · OAuth Consent Phishing → Lateral Movement</div></div></div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><span class="bar"></span>Containment</div><div class="panel-tag" id="containmentTag">2/3 complete</div></div>
+      <div class="pb-phase">
+        <div class="pb-step done"><div class="pb-num">✓</div><div><div class="pb-name">Revoke OAuth grant "QuickSync Helper"</div><div class="pb-desc">Application consent revoked org-wide; refresh tokens invalidated for d.romero@corp-example.io.</div></div><div class="pb-status done">Done</div></div>
+        <div class="pb-step done"><div class="pb-num">✓</div><div><div class="pb-name">Remove malicious mail forwarding rule</div><div class="pb-desc">Inbox rule routing to external SMTP relay deleted; mailbox audit log preserved.</div></div><div class="pb-status done">Done</div></div>
+        <div class="pb-step" id="pbStep3"><div class="pb-num">3</div><div><div class="pb-name">Isolate host FIN-WKS-114</div><div class="pb-desc">Network isolation via EDR agent, preserving memory for forensic capture.</div></div><div class="pb-status wait">Awaiting approval</div></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-head"><div class="panel-title"><span class="bar"></span>Eradication &amp; Recovery</div><div class="panel-tag">Queued</div></div>
+      <div class="pb-phase">
+        <div class="pb-step"><div class="pb-num">4</div><div><div class="pb-name">Reset credentials for affected accounts</div><div class="pb-desc">Force password reset + re-enroll MFA for d.romero and any accounts touched via lateral movement.</div></div><div class="pb-status queued">Queued</div></div>
+        <div class="pb-step"><div class="pb-num">5</div><div><div class="pb-name">Rebuild FIN-WKS-114 from known-good image</div><div class="pb-desc">Standard rebuild after BYOVD driver load; restore from last clean backup snapshot.</div></div><div class="pb-status queued">Queued</div></div>
+        <div class="pb-step"><div class="pb-num">6</div><div><div class="pb-name">Block C2 indicators at perimeter</div><div class="pb-desc">185.220.101.47 and sync-cdn-relay.net pushed to firewall + DNS sinkhole.</div></div><div class="pb-status queued">Queued</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EXEC DASHBOARD ================= -->
+  <section class="sec reveal" id="exec">
+    <div class="sec-head"><div><div class="sec-eyebrow">Reporting Agent</div><div class="sec-title">Executive Dashboard</div><div class="sec-sub">Shift summary · 03:00–06:00 UTC</div></div></div>
+    <div class="kpi-row">
+      <div class="kpi crit"><div class="l">Incidents Handled</div><div class="v">4</div><div class="d up">▲ 1</div></div>
+      <div class="kpi"><div class="l">Auto-Contained</div><div class="v">89%</div><div class="d down">▼ 2%</div></div>
+      <div class="kpi"><div class="l">Analyst Hours Saved</div><div class="v">14.2</div><div class="d down">▼ est.</div></div>
+      <div class="kpi"><div class="l">Residual Risk</div><div class="v">Med</div><div class="d up">▲ from Low</div></div>
+    </div>
+    <div class="exec-cols" style="margin-top:14px;">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title"><span class="bar"></span>Alert Volume — 24H</div></div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar-shape" style="height:38%"></div><div class="bar-lbl">00–04</div></div>
+          <div class="bar-col"><div class="bar-shape" style="height:71%"></div><div class="bar-lbl">04–08</div></div>
+          <div class="bar-col"><div class="bar-shape" style="height:52%"></div><div class="bar-lbl">08–12</div></div>
+          <div class="bar-col"><div class="bar-shape" style="height:45%"></div><div class="bar-lbl">12–16</div></div>
+          <div class="bar-col"><div class="bar-shape" style="height:63%"></div><div class="bar-lbl">16–20</div></div>
+          <div class="bar-col"><div class="bar-shape" style="height:30%"></div><div class="bar-lbl">20–24</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title"><span class="bar"></span>Risk Heatmap — Business Units</div></div>
+        <div class="risk-heat" id="riskHeat"></div>
+        <div class="entity-legend" style="margin-top:12px;">
+          <span><span class="lg-sw" style="background:var(--ok)"></span>Low</span>
+          <span><span class="lg-sw" style="background:var(--warn)"></span>Elevated</span>
+          <span><span class="lg-sw" style="background:var(--helpag-red)"></span>Critical</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LOGS FOOTER ================= -->
+  <section class="sec reveal" id="logs">
+    <div class="sec-head"><div><div class="sec-eyebrow">Telemetry</div><div class="sec-title">System Logs</div></div></div>
+    <div class="logs-panel" id="logsPanel">
+      <div><b>[DETECTION]</b> new signature deployed: RANSOM_PRECURSOR_VSS_DELETE</div>
+      <div><b>[SIEM]</b> 4,812 events/min ingested, cluster nominal</div>
+      <div><b>[TRIAGE]</b> ALRT-88213 escalated to Critical, correlation score 0.94</div>
+      <div><b>[THREAT-INTEL]</b> IOC feed sync complete, 214 new indicators</div>
+      <div><b>[CLOUD]</b> AWS GuardDuty finding UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration</div>
+      <div><b>[RESPONSE]</b> isolation drafted for FIN-WKS-114, awaiting approval</div>
+      <div><b>[IDENTITY]</b> impossible travel flagged for k.alvarez</div>
+      <div><b>[REPORTING]</b> shift summary compilation at 90%</div>
+    </div>
+  </section>
+
+  <!-- ================= TOOL STACK ================= -->
+  <section class="sec reveal" id="stack">
+    <div class="sec-head"><div><div class="sec-eyebrow">Reference Architecture</div><div class="sec-title">Open-Source Tool Stack</div><div class="sec-sub">What a real build of this platform could run on</div></div></div>
+    <div class="stack-grid">
+      <div class="stack-cat">
+        <h4>SIEM / Log Aggregation</h4>
+        <div class="stack-tags"><span class="stack-tag">Wazuh</span><span class="stack-tag">Elastic Stack</span><span class="stack-tag">Graylog</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Network Detection</h4>
+        <div class="stack-tags"><span class="stack-tag">Suricata</span><span class="stack-tag">Zeek</span><span class="stack-tag">Security Onion</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Endpoint / Host Telemetry</h4>
+        <div class="stack-tags"><span class="stack-tag">osquery</span><span class="stack-tag">OSSEC</span><span class="stack-tag">Wazuh Agent</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>SOAR / Automation</h4>
+        <div class="stack-tags"><span class="stack-tag">Shuffle</span><span class="stack-tag">StackStorm</span><span class="stack-tag">n8n</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Case Management</h4>
+        <div class="stack-tags"><span class="stack-tag">TheHive</span><span class="stack-tag">Cortex</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Threat Intelligence</h4>
+        <div class="stack-tags"><span class="stack-tag">MISP</span><span class="stack-tag">OpenCTI</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Detection Engineering</h4>
+        <div class="stack-tags"><span class="stack-tag">Sigma</span><span class="stack-tag">YARA</span><span class="stack-tag">MITRE CALDERA</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>ATT&amp;CK Mapping</h4>
+        <div class="stack-tags"><span class="stack-tag">MITRE ATT&amp;CK Navigator</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Autonomous Agent Orchestration</h4>
+        <div class="stack-tags"><span class="stack-tag">LangChain</span><span class="stack-tag">AutoGen</span><span class="stack-tag">CrewAI</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>Dashboards / Metrics</h4>
+        <div class="stack-tags"><span class="stack-tag">Grafana</span><span class="stack-tag">Prometheus</span></div>
+      </div>
+      <div class="stack-cat">
+        <h4>This Prototype's Frontend</h4>
+        <div class="stack-tags"><span class="stack-tag">HTML5 Canvas API</span><span class="stack-tag">Vanilla JavaScript</span><span class="stack-tag">CSS3</span><span class="stack-tag">Google Fonts</span></div>
+      </div>
+    </div>
+    <div class="stack-note">This dashboard itself is a static HTML/CSS/JS prototype with synthetic demo data — it isn't wired to any of the above. The list names real open-source projects that commonly fill each role in an actual SOC build, for reference if this were taken from mockup to production.</div>
+    <footer class="note">AIXFORCE PROTOTYPE · an e&amp; enterprise company · SYNTHETIC DEMONSTRATION DATA · NOT CONNECTED TO PRODUCTION TELEMETRY</footer>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- clock ---------- */
+  var clockEl = document.getElementById('hdrClock');
+  var t0 = Date.now() - (4*3600+12*60+37)*1000;
+  function tickClock(){
+    var s = Math.floor((Date.now()-t0)/1000);
+    var hh = String(Math.floor(s/3600)%24).padStart(2,'0');
+    var mm = String(Math.floor(s/60)%60).padStart(2,'0');
+    var ss = String(s%60).padStart(2,'0');
+    if(clockEl) clockEl.textContent = hh+':'+mm+':'+ss+'Z';
+  }
+  tickClock(); setInterval(tickClock, 1000);
+
+  /* ---------- subtle floating particle grid background (brand navy/red, low opacity) ---------- */
+  var canvas = document.getElementById('netgraph');
+  var ctx = canvas.getContext('2d');
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H, nodes = [];
+  var NAVY = '91,155,242', RED = '236,28,36';
+
+  function sizeCanvas(){
+    W = window.innerWidth; H = document.documentElement.scrollHeight;
+    canvas.width = W * DPR; canvas.height = Math.min(H, window.innerHeight*1.6) * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = Math.min(H, window.innerHeight*1.6) + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  function makeNodes(){
+    var h = parseInt(canvas.style.height,10) || window.innerHeight;
+    var count = Math.max(26, Math.min(70, Math.round((W*h)/32000)));
+    nodes = [];
+    for(var i=0;i<count;i++){
+      nodes.push({x:Math.random()*W, y:Math.random()*h, vx:(Math.random()-0.5)*0.14, vy:(Math.random()-0.5)*0.14, r:1.8+Math.random()*2.6, hue:Math.random()<0.85?NAVY:RED, pulse:Math.random()*Math.PI*2});
+    }
+  }
+  var LINK_DIST = 210;
+  function step(t){
+    var h = parseInt(canvas.style.height,10) || window.innerHeight;
+    ctx.clearRect(0,0,W,h);
+    for(var i=0;i<nodes.length;i++){
+      var a = nodes[i];
+      if(!reduceMotion){
+        a.x+=a.vx; a.y+=a.vy;
+        if(a.x<-20)a.x=W+20; if(a.x>W+20)a.x=-20; if(a.y<-20)a.y=h+20; if(a.y>h+20)a.y=-20;
+      }
+      for(var j=i+1;j<nodes.length;j++){
+        var b=nodes[j]; var dx=a.x-b.x, dy=a.y-b.y; var d=Math.sqrt(dx*dx+dy*dy);
+        if(d<LINK_DIST){
+          ctx.strokeStyle='rgba('+NAVY+','+((1-d/LINK_DIST)*0.24).toFixed(3)+')'; ctx.lineWidth=0.9;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    for(var k=0;k<nodes.length;k++){
+      var n=nodes[k]; var glow=reduceMotion?0.7:(0.5+0.4*Math.sin((t||0)/1000+n.pulse));
+      ctx.beginPath(); ctx.fillStyle='rgba('+n.hue+','+(0.45*glow).toFixed(3)+')'; ctx.arc(n.x,n.y,n.r*2.4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.fillStyle='rgba('+n.hue+',0.75)'; ctx.arc(n.x,n.y,n.r*0.8,0,Math.PI*2); ctx.fill();
+    }
+    if(!reduceMotion) requestAnimationFrame(step);
+  }
+  var rTimer;
+  window.addEventListener('resize', function(){ clearTimeout(rTimer); rTimer=setTimeout(function(){ sizeCanvas(); makeNodes(); if(reduceMotion) step(0); },150); });
+  try{ sizeCanvas(); makeNodes(); step(0); }catch(e){}
+
+  /* ---------- scroll reveal ---------- */
+  var reveals = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in-view'); io.unobserve(en.target); } });
+    }, {threshold:0.15});
+    reveals.forEach(function(r){ io.observe(r); });
+  } else {
+    reveals.forEach(function(r){ r.classList.add('in-view'); });
+  }
+
+  /* ---------- button ripple ---------- */
+  document.querySelectorAll('.btn').forEach(function(b){
+    b.addEventListener('click', function(e){
+      if(reduceMotion) return;
+      var rect = b.getBoundingClientRect();
+      var rip = document.createElement('span');
+      rip.className='ripple';
+      var size = Math.max(rect.width, rect.height);
+      rip.style.width = rip.style.height = size+'px';
+      rip.style.left = (e.clientX-rect.left-size/2)+'px';
+      rip.style.top = (e.clientY-rect.top-size/2)+'px';
+      b.appendChild(rip);
+      setTimeout(function(){ rip.remove(); }, 600);
+    });
+  });
+
+  /* ---------- Iron-Dome radar (navy/red on light) ---------- */
+  var dc = document.getElementById('domeCanvas');
+  var dctx = dc.getContext('2d');
+  var domeArmed = false;
+  var sweepAngle = 0;
+  var blips = [];
+  var shockwave = null;
+
+  function sizeDome(){
+    var rect = dc.parentElement.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio||1,2);
+    dc.width = rect.width*dpr; dc.height = rect.height*dpr;
+    dc.style.width = rect.width+'px'; dc.style.height = rect.height+'px';
+    dctx.setTransform(dpr,0,0,dpr,0,0);
+    return rect;
+  }
+  var domeRect = sizeDome();
+  window.addEventListener('resize', function(){ domeRect = sizeDome(); });
+
+  function spawnBlip(){
+    var ang = Math.random()*Math.PI*2;
+    blips.push({angle:ang, r:1, life:0, speed:0.006+Math.random()*0.004});
+  }
+  var blipTimer = 0;
+
+  function drawDome(){
+    var w = domeRect.width, h = domeRect.height;
+    var cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 8;
+    dctx.clearRect(0,0,w,h);
+
+    for(var i=1;i<=4;i++){
+      dctx.beginPath();
+      dctx.strokeStyle = 'rgba(91,155,242,'+(0.16+(domeArmed?0.08:0))+')';
+      dctx.lineWidth = 1;
+      dctx.arc(cx,cy,R*i/4,0,Math.PI*2);
+      dctx.stroke();
+    }
+    dctx.strokeStyle='rgba(91,155,242,0.14)'; dctx.beginPath(); dctx.moveTo(cx-R,cy); dctx.lineTo(cx+R,cy); dctx.moveTo(cx,cy-R); dctx.lineTo(cx,cy+R); dctx.stroke();
+
+    if(!reduceMotion) sweepAngle += domeArmed ? 0.045 : 0.016;
+    dctx.save();
+    dctx.beginPath();
+    dctx.moveTo(cx,cy);
+    dctx.arc(cx,cy,R, sweepAngle-0.5, sweepAngle);
+    dctx.closePath();
+    var sweepColor = domeArmed ? '91,155,242' : '130,145,160';
+    dctx.fillStyle = 'rgba('+sweepColor+',0.16)';
+    dctx.fill();
+    dctx.restore();
+
+    dctx.strokeStyle = domeArmed ? 'rgba(91,155,242,0.85)' : 'rgba(130,145,160,0.5)';
+    dctx.lineWidth = 1.4;
+    dctx.beginPath(); dctx.moveTo(cx,cy); dctx.lineTo(cx+R*Math.cos(sweepAngle), cy+R*Math.sin(sweepAngle)); dctx.stroke();
+
+    blipTimer++;
+    if(domeArmed && blipTimer > 55){ blipTimer = 0; spawnBlip(); }
+    blips = blips.filter(function(b){ return b.r > 0.05; });
+    blips.forEach(function(b){
+      if(!reduceMotion) b.r -= b.speed;
+      var bx = cx + R*b.r*Math.cos(b.angle), by = cy + R*b.r*Math.sin(b.angle);
+      dctx.beginPath(); dctx.fillStyle = 'rgba(236,28,36,'+Math.min(1,b.r+0.3)+')'; dctx.arc(bx,by,3.2,0,Math.PI*2); dctx.fill();
+      dctx.beginPath(); dctx.strokeStyle = 'rgba(236,28,36,0.35)'; dctx.arc(bx,by,7,0,Math.PI*2); dctx.stroke();
+    });
+
+    var pulse = 0.5+0.5*Math.sin(Date.now()/700);
+    dctx.beginPath();
+    dctx.fillStyle = domeArmed ? 'rgba(91,155,242,'+(0.2+0.1*pulse)+')' : 'rgba(130,145,160,0.12)';
+    dctx.arc(cx,cy,20+ (domeArmed?4*pulse:0),0,Math.PI*2);
+    dctx.fill();
+    dctx.beginPath();
+    dctx.strokeStyle = domeArmed ? '#5B9BF2' : 'rgba(130,145,160,0.6)';
+    dctx.lineWidth = 2;
+    dctx.arc(cx,cy,20,0,Math.PI*2); dctx.stroke();
+
+    if(shockwave !== null){
+      shockwave += reduceMotion ? R : R*0.045;
+      dctx.beginPath();
+      dctx.strokeStyle = 'rgba(30,138,99,'+Math.max(0,1-shockwave/R).toFixed(2)+')';
+      dctx.lineWidth = 2.5;
+      dctx.arc(cx,cy,shockwave,0,Math.PI*2);
+      dctx.stroke();
+      if(shockwave > R) shockwave = null;
+    }
+
+    requestAnimationFrame(drawDome);
+  }
+  drawDome();
+
+  var domeBtn = document.getElementById('activateDomeBtn');
+  domeBtn.addEventListener('click', function(){
+    domeArmed = !domeArmed;
+    domeBtn.textContent = domeArmed ? 'Dome Armed ●' : 'Activate Dome';
+  });
+
+  /* ---------- risk heatmap ---------- */
+  var heat = document.getElementById('riskHeat');
+  if(heat){
+    var levels = ['ok','ok','warn','ok','ok','crit','ok','ok','warn','ok','ok','ok','ok','warn','crit','ok','ok','warn','ok','ok','ok'];
+    var colorMap = {ok:'rgba(30,138,99,0.55)', warn:'rgba(201,122,30,0.55)', crit:'rgba(236,28,36,0.55)'};
+    levels.forEach(function(l){ var c=document.createElement('div'); c.className='heat-cell'; c.style.background=colorMap[l]; heat.appendChild(c); });
+  }
+
+  /* ---------- entity graph ---------- */
+  var ec = document.getElementById('entityCanvas');
+  if(ec){
+    var ectx = ec.getContext('2d');
+    var entities = [
+      {id:'user',  label:'d.romero',        sub:'user identity',   x:0.5, y:0.14, color:'91,155,242'},
+      {id:'app',   label:'QuickSync Helper',sub:'OAuth app',       x:0.18,y:0.32, color:'236,28,36'},
+      {id:'relay', label:'sync-cdn-relay.net', sub:'C2 domain',    x:0.06,y:0.55, color:'236,28,36'},
+      {id:'wks',   label:'FIN-WKS-114',     sub:'workstation',     x:0.5, y:0.42, color:'176,140,255'},
+      {id:'dc',    label:'DC-EAST-02',      sub:'domain controller',x:0.78,y:0.28,color:'176,140,255'},
+      {id:'c2ip',  label:'185.220.101.47',  sub:'C2 IP',           x:0.85,y:0.58, color:'236,28,36'},
+      {id:'jchen', label:'j.chen',          sub:'user identity',   x:0.62,y:0.66, color:'91,155,242'},
+      {id:'s3',    label:'acct-exports-prod', sub:'S3 bucket',     x:0.22,y:0.78, color:'49,196,141'},
+      {id:'svc',   label:'iam-deploy-svc',  sub:'service account', x:0.42,y:0.9,  color:'91,155,242'}
+    ];
+    var edges = [['user','app'],['app','relay'],['user','wks'],['wks','dc'],['wks','c2ip'],['dc','jchen'],['svc','s3'],['jchen','svc']];
+    var byId = {}; entities.forEach(function(e){ byId[e.id]=e; });
+    function drawEntity(){
+      var rect = ec.parentElement.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio||1,2);
+      ec.width = rect.width*dpr; ec.height = rect.height*dpr;
+      ec.style.width = rect.width+'px'; ec.style.height = rect.height+'px';
+      ectx.setTransform(dpr,0,0,dpr,0,0);
+      ectx.clearRect(0,0,rect.width,rect.height);
+      edges.forEach(function(pair){
+        var a=byId[pair[0]], b=byId[pair[1]];
+        ectx.strokeStyle='rgba(255,255,255,0.18)'; ectx.lineWidth=1.2;
+        ectx.beginPath(); ectx.moveTo(a.x*rect.width,a.y*rect.height); ectx.lineTo(b.x*rect.width,b.y*rect.height); ectx.stroke();
+      });
+      entities.forEach(function(e){
+        var ex=e.x*rect.width, ey=e.y*rect.height;
+        ectx.beginPath(); ectx.fillStyle='rgba('+e.color+',0.16)'; ectx.arc(ex,ey,17,0,Math.PI*2); ectx.fill();
+        ectx.beginPath(); ectx.fillStyle='rgba('+e.color+',0.95)'; ectx.arc(ex,ey,5.5,0,Math.PI*2); ectx.fill();
+        ectx.strokeStyle='rgba('+e.color+',0.9)'; ectx.lineWidth=1.5; ectx.beginPath(); ectx.arc(ex,ey,10,0,Math.PI*2); ectx.stroke();
+        ectx.font='700 11px "Inter", sans-serif'; ectx.fillStyle='#EDF2F7'; ectx.textAlign='center'; ectx.fillText(e.label,ex,ey+26);
+        ectx.font='400 9.5px "Roboto Mono", monospace'; ectx.fillStyle='#93A3B4'; ectx.fillText(e.sub,ex,ey+38);
+      });
+    }
+    drawEntity();
+    var rTimer2; window.addEventListener('resize', function(){ clearTimeout(rTimer2); rTimer2=setTimeout(drawEntity,150); });
+  }
+
+  /* ---------- run scenario / contain threat ---------- */
+  var scenarioRunning = false;
+  function containThreat(){
+    var step = document.getElementById('tlStep5');
+    var pbStep3 = document.getElementById('pbStep3');
+    if(step && step.classList.contains('pending')){
+      step.classList.remove('pending'); step.classList.add('ok');
+      step.querySelector('.tl-time').textContent = 'JUST NOW';
+      step.querySelector('.tl-title').textContent = 'Containment complete — host isolated';
+      step.querySelector('.tl-body').innerHTML = 'FIN-WKS-114 isolated from network via EDR agent; memory image captured for forensics. OAuth grant already revoked. Incident moved to <b>eradication</b> phase.';
+      var tag = document.getElementById('tlStatusTag'); if(tag) tag.textContent = '5 events · contained';
+      var ctag = document.getElementById('containmentTag'); if(ctag) ctag.textContent = '3/3 complete';
+      if(pbStep3){
+        pbStep3.classList.add('done');
+        pbStep3.querySelector('.pb-num').textContent = '✓';
+        pbStep3.querySelector('.pb-status').className = 'pb-status done';
+        pbStep3.querySelector('.pb-status').textContent = 'Done';
+      }
+      shockwave = 1;
+    }
+  }
+  function runScenario(){
+    if(scenarioRunning) return;
+    scenarioRunning = true;
+    domeArmed = true;
+    domeBtn.textContent = 'Dome Armed ●';
+    document.getElementById('timeline').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
+    var rb = document.getElementById('runScenarioBtn');
+    rb.disabled = true; rb.textContent = '● Containment in progress…';
+    var tag = document.getElementById('tlStatusTag'); if(tag) tag.textContent = 'response agent acting…';
+    setTimeout(function(){
+      containThreat();
+      rb.disabled = false; rb.textContent = '✓ Scenario Complete — Replay';
+      scenarioRunning = false;
+    }, 1700);
+  }
+  document.getElementById('runScenarioBtn').addEventListener('click', runScenario);
+  document.getElementById('containBtn').addEventListener('click', containThreat);
+})();
+</script>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Security Operations Demos</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #07090c;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  }
+  .wrap { max-width: 640px; padding: 32px; text-align: center; }
+  h1 { font-size: 26px; margin-bottom: 8px; }
+  p.sub { color: #7d8590; font-size: 14px; margin-bottom: 36px; }
+  .cards { display: grid; gap: 16px; }
+  a.card {
+    display: block;
+    text-align: left;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    background: #0e1116;
+    transition: border-color 0.15s ease;
+  }
+  a.card:hover { border-color: rgba(25,195,177,0.5); }
+  .card h2 { margin: 0 0 6px; font-size: 16px; color: #19c3b1; }
+  .card p { margin: 0; font-size: 13px; color: #7d8590; line-height: 1.5; }
+  footer { margin-top: 32px; font-size: 11px; color: #5a6b7a; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Security Operations Demos</h1>
+    <p class="sub">Two front-end prototypes. All data is synthetic.</p>
+    <div class="cards">
+      <a class="card" href="xforce/">
+        <h2>XForce Command Center</h2>
+        <p>React + D3 detection-to-response flow dashboard, with a scripted AI reasoning assistant.</p>
+      </a>
+      <a class="card" href="aixforce/">
+        <h2>AIXForce Iron-Dome</h2>
+        <p>Dark, radar-styled autonomous SOC concept — single-file HTML demo.</p>
+      </a>
+    </div>
+    <footer>Synthetic demonstration data · not connected to production telemetry</footer>
+  </div>
+</body>
+</html>
